@@ -1,9 +1,11 @@
 from pathlib import Path
+from typing import Dict, Tuple
 
 import pandas as pd
 
 from src.assumptions import apply_scenario, assumptions_to_dict
 from src.load_data import load_assumptions, load_policies, load_scenarios
+from src.reporting import generate_all_charts, write_markdown_report
 from src.valuation import summarize_scenario
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
@@ -12,7 +14,7 @@ OUTPUT_DIR = ROOT_DIR / "outputs"
 
 def project_cashflows(
     policies: pd.DataFrame,
-    assumptions: dict[str, float],
+    assumptions: Dict[str, float],
     scenario_name: str = "base_case",
 ) -> pd.DataFrame:
     """Project yearly cash flows for a simplified savings-insurance portfolio.
@@ -70,7 +72,7 @@ def project_cashflows(
     return pd.DataFrame(rows)
 
 
-def run_all_scenarios() -> tuple[pd.DataFrame, pd.DataFrame]:
+def run_all_scenarios() -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Run the base model and all predefined sensitivity scenarios."""
     policies = load_policies()
     assumptions = assumptions_to_dict(load_assumptions())
@@ -93,15 +95,26 @@ def run_all_scenarios() -> tuple[pd.DataFrame, pd.DataFrame]:
 
 
 def main() -> None:
-    """Run projections and write output CSV files."""
+    """Run projections, write output CSV files, and generate visual reports."""
     OUTPUT_DIR.mkdir(exist_ok=True)
 
     cashflows, summaries = run_all_scenarios()
-    cashflows.to_csv(OUTPUT_DIR / "cashflow_projection.csv", index=False)
-    summaries.to_csv(OUTPUT_DIR / "scenario_results.csv", index=False)
+    cashflow_path = OUTPUT_DIR / "cashflow_projection.csv"
+    summary_path = OUTPUT_DIR / "scenario_results.csv"
 
-    print("Cash-flow projection written to outputs/cashflow_projection.csv")
-    print("Scenario summary written to outputs/scenario_results.csv")
+    cashflows.to_csv(cashflow_path, index=False)
+    summaries.to_csv(summary_path, index=False)
+
+    chart_paths = generate_all_charts(cashflows, summaries, scenario_name="base_case")
+    report_path = write_markdown_report(summaries)
+
+    print(f"Cash-flow projection written to {cashflow_path}")
+    print(f"Scenario summary written to {summary_path}")
+    print(f"Markdown report written to {report_path}")
+    print("\nGenerated charts:")
+    for chart_name, chart_path in chart_paths.items():
+        print(f"- {chart_name}: {chart_path}")
+
     print("\nScenario summary:")
     print(summaries.sort_values("pv_future_profit", ascending=False).to_string(index=False))
 
