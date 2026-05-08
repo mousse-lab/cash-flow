@@ -1,0 +1,6 @@
+scenario_name,lapse_rate_multiplier,investment_return_shift,expense_multiplier,fee_rate_shift,description
+base_case,1.0,0.0,1.0,0.0,Base assumptions
+high_lapse,1.5,0.0,1.0,0.0,Higher customer lapse/surrender rate
+low_investment_return,1.0,-0.015,1.0,0.0,Lower expected fund return
+high_expenses,1.0,0.0,1.2,0.0,Higher administration expenses
+combined_stress,1.5,-0.015,1.2,-0.002,Combined adverse scenario
