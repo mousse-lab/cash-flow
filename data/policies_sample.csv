@@ -1,0 +1,11 @@
+policy_id,age,gender,annual_premium,fund_value,policy_duration,product_type,start_year
+P0001,34,F,18000,95000,2,unit_linked_savings,2024
+P0002,45,M,24000,180000,6,unit_linked_savings,2020
+P0003,52,F,30000,260000,8,traditional_savings,2018
+P0004,29,M,12000,40000,1,unit_linked_savings,2025
+P0005,61,F,36000,420000,12,traditional_savings,2014
+P0006,38,M,21000,135000,4,unit_linked_savings,2022
+P0007,47,F,27000,220000,7,unit_linked_savings,2019
+P0008,55,M,33000,310000,10,traditional_savings,2016
+P0009,41,F,20000,150000,5,unit_linked_savings,2021
+P0010,33,M,16000,80000,3,unit_linked_savings,2023
