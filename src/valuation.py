@@ -1,3 +1,5 @@
+from typing import Dict, Optional, Union
+
 import pandas as pd
 
 
@@ -14,7 +16,7 @@ def profit_margin(cashflows: pd.DataFrame) -> float:
     return float(cashflows["annual_profit"].sum() / total_premium)
 
 
-def break_even_year(cashflows: pd.DataFrame) -> int | None:
+def break_even_year(cashflows: pd.DataFrame) -> Optional[int]:
     """Return first projection year where cumulative discounted profit becomes positive."""
     cumulative = cashflows["discounted_profit"].cumsum()
     positive_years = cashflows.loc[cumulative > 0, "projection_year"]
@@ -25,7 +27,7 @@ def break_even_year(cashflows: pd.DataFrame) -> int | None:
     return int(positive_years.iloc[0])
 
 
-def summarize_scenario(cashflows: pd.DataFrame) -> dict[str, float | int | None]:
+def summarize_scenario(cashflows: pd.DataFrame) -> Dict[str, Union[float, int, None]]:
     """Create a compact scenario-level valuation summary."""
     return {
         "pv_future_profit": present_value_of_future_profits(cashflows),
