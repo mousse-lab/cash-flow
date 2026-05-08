@@ -1,0 +1,10 @@
+assumption_name,value,description
+projection_years,30,Number of years to project future cash flows
+discount_rate,0.035,Rate used to discount future profits
+investment_return,0.045,Expected yearly fund return
+annual_fee_rate,0.012,Yearly fee charged on fund value
+expense_per_policy,450,Annual administration cost per active policy
+acquisition_cost_rate,0.02,Initial acquisition cost as share of annual premium
+base_lapse_rate,0.06,Annual probability that a policy lapses
+mortality_rate,0.001,Annual simplified mortality assumption
+expense_inflation,0.02,Annual increase in expenses
