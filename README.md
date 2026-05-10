@@ -2,7 +2,7 @@
 
 A small Python project that simulates cash-flow projection and profitability analysis for a savings-insurance portfolio.
 
-The project is inspired by actuarial modelling workflows used in tools such as **RiskAgility Financial Modeller (RAFM)**, but it does not use RAFM directly. The goal is to show how policy data, assumptions, scenarios, and valuation logic can be combined into a simple cash-flow model.
+The project is inspired by actuarial modelling workflows used in tools such as **RiskAgility Financial Modeller (RAFM)**. The goal is to show how policy data, assumptions, scenarios, and valuation logic can be combined into a simple cash-flow model.
 
 ## What the project does
 
@@ -21,7 +21,7 @@ It includes:
 
 ## Data
 
-The project does not use real customer policy data. The policy portfolio is synthetic, because real life-insurance policy data is private and not publicly available.
+The project does not use real customer policy data. 
 
 The model uses three types of data:
 
@@ -33,13 +33,6 @@ The model uses three types of data:
 | `data/processed/financial_inputs.csv` | Placeholder annual-report-style financial inputs |
 | `data/processed/mortality_table_sweden.csv` | Placeholder age/gender mortality assumptions |
 | `data/processed/interest_rate_assumptions.csv` | Placeholder discount-rate and investment-return assumptions |
-
-The processed files are structured so they can later be replaced with public data from sources such as:
-
-- Swedbank Försäkring annual reports
-- Statistics Sweden / SCB mortality tables
-- Human Mortality Database
-- Sveriges Riksbank interest-rate data
 
 ## How the model works
 
@@ -60,7 +53,7 @@ The workflow is:
 7. Calculate valuation metrics.
 8. Generate CSV outputs, charts, and a short markdown report.
 
-The simplified projection calculates:
+The projection calculates:
 
 ```text
 active policies
@@ -117,17 +110,9 @@ git clone git@github.com:mousse-lab/cash-flow.git
 cd cash-flow
 ```
 
-Create and activate a virtual environment:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
 Install dependencies:
 
 ```bash
-pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
@@ -159,7 +144,7 @@ scenario_comparison_pv_profit.png
 scenario_comparison_profit_margin.png
 ```
 
-The most useful visual summary is:
+The visual summary is:
 
 ```text
 outputs/dashboard_base_case.png
@@ -171,34 +156,10 @@ outputs/dashboard_base_case.png
 
 Year-by-year projected cash flows for each scenario.
 
-Important columns:
-
-```text
-scenario_name
-projection_year
-active_policies
-premium_income
-fund_value
-fee_income
-expenses
-annual_profit
-discounted_profit
-```
-
 ### `outputs/scenario_results.csv`
 
 Scenario-level profitability summary.
 
-Important columns:
-
-```text
-scenario_name
-pv_future_profit
-total_fee_income
-total_expenses
-profit_margin
-break_even_year
-```
 
 ## Current limitations
 
