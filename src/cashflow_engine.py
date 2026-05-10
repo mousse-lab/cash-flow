@@ -3,13 +3,103 @@ from typing import Dict, Tuple
 
 import pandas as pd
 
-from src.assumptions import apply_scenario, assumptions_to_dict
-from src.load_data import load_assumptions, load_policies, load_scenarios
+from src.assumptions import (
+    apply_interest_rate_assumption,
+    apply_scenario,
+    assumptions_to_dict,
+    financial_inputs_to_dict,
+)
+from src.load_data import (
+    load_assumptions,
+    load_financial_inputs,
+    load_interest_rate_assumptions,
+    load_mortality_table,
+    load_policies,
+    load_scenarios,
+)
 from src.reporting import generate_all_charts, write_markdown_report
 from src.valuation import summarize_scenario
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 OUTPUT_DIR = ROOT_DIR / "outputs"
+
+
+def calibrate_policy_portfolio(
+    policies: pd.DataFrame,
+    financial_inputs: Dict[str, float],
+) -> pd.DataFrame:
+    """Scale synthetic policy premiums and fund values to public financial-input totals.
+
+    Real policy-level data is not publicly available, so the model keeps a
+    synthetic portfolio but calibrates its aggregate premium income and fund
+    value to processed annual-report style inputs.
+    """
+    calibrated = policies.copy()
+
+    target_premium_income = financial_inputs.get("premium_income")
+    target_assets_under_management = financial_inputs.get("assets_under_management")
+
+    if target_premium_income and calibrated["annual_premium"].sum() > 0:
+        premium_scale = target_premium_income / calibrated["annual_premium"].sum()
+        calibrated["annual_premium"] = calibrated["annual_premium"] * premium_scale
+
+    if target_assets_under_management and calibrated["fund_value"].sum() > 0:
+        fund_scale = target_assets_under_management / calibrated["fund_value"].sum()
+        calibrated["fund_value"] = calibrated["fund_value"] * fund_scale
+
+    return calibrated
+
+
+def estimate_portfolio_mortality_rate(
+    policies: pd.DataFrame,
+    mortality_table: pd.DataFrame,
+) -> float:
+    """Estimate a portfolio-level mortality rate from age/gender mortality data.
+
+    The current projection engine uses an aggregate mortality assumption. This
+    function makes that assumption data-driven by matching each policy to the
+    nearest available age/gender mortality rate and then taking a portfolio
+    average.
+    """
+    if mortality_table.empty:
+        return 0.0
+
+    mortality_rates = []
+
+    for _, policy in policies.iterrows():
+        gender_table = mortality_table[mortality_table["gender"] == policy["gender"]]
+        if gender_table.empty:
+            gender_table = mortality_table
+
+        nearest_index = (gender_table["age"] - policy["age"]).abs().idxmin()
+        mortality_rates.append(float(gender_table.loc[nearest_index, "qx"]))
+
+    if not mortality_rates:
+        return 0.0
+
+    return float(sum(mortality_rates) / len(mortality_rates))
+
+
+def update_assumptions_from_processed_data(
+    assumptions: Dict[str, float],
+    policies: pd.DataFrame,
+    financial_inputs: Dict[str, float],
+    mortality_table: pd.DataFrame,
+    interest_rates: pd.DataFrame,
+    scenario_name: str,
+) -> Dict[str, float]:
+    """Update base assumptions using processed real-data templates."""
+    updated = apply_interest_rate_assumption(assumptions, interest_rates, scenario_name)
+
+    estimated_mortality = estimate_portfolio_mortality_rate(policies, mortality_table)
+    if estimated_mortality > 0:
+        updated["mortality_rate"] = estimated_mortality
+
+    operating_expenses = financial_inputs.get("operating_expenses")
+    if operating_expenses and len(policies) > 0:
+        updated["expense_per_policy"] = operating_expenses / len(policies)
+
+    return updated
 
 
 def project_cashflows(
@@ -66,6 +156,10 @@ def project_cashflows(
                 "acquisition_costs": acquisition_costs,
                 "annual_profit": annual_profit,
                 "discounted_profit": discounted_profit,
+                "mortality_rate": mortality_rate,
+                "lapse_rate": lapse_rate,
+                "discount_rate": discount_rate,
+                "investment_return": investment_return,
             }
         )
 
@@ -74,21 +168,36 @@ def project_cashflows(
 
 def run_all_scenarios() -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Run the base model and all predefined sensitivity scenarios."""
-    policies = load_policies()
+    raw_policies = load_policies()
+    financial_inputs = financial_inputs_to_dict(load_financial_inputs())
+    policies = calibrate_policy_portfolio(raw_policies, financial_inputs)
+
     assumptions = assumptions_to_dict(load_assumptions())
     scenarios = load_scenarios()
+    mortality_table = load_mortality_table()
+    interest_rates = load_interest_rate_assumptions()
 
     all_cashflows = []
     summaries = []
 
     for _, scenario in scenarios.iterrows():
         scenario_name = scenario["scenario_name"]
-        scenario_assumptions = apply_scenario(assumptions, scenario)
+        data_driven_assumptions = update_assumptions_from_processed_data(
+            assumptions=assumptions,
+            policies=policies,
+            financial_inputs=financial_inputs,
+            mortality_table=mortality_table,
+            interest_rates=interest_rates,
+            scenario_name=scenario_name,
+        )
+        scenario_assumptions = apply_scenario(data_driven_assumptions, scenario)
         cashflows = project_cashflows(policies, scenario_assumptions, scenario_name)
         all_cashflows.append(cashflows)
 
         summary = summarize_scenario(cashflows)
         summary["scenario_name"] = scenario_name
+        summary["source_premium_income"] = financial_inputs.get("premium_income")
+        summary["source_operating_expenses"] = financial_inputs.get("operating_expenses")
         summaries.append(summary)
 
     return pd.concat(all_cashflows, ignore_index=True), pd.DataFrame(summaries)
