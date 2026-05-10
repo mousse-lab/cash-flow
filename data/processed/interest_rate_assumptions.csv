@@ -1,0 +1,5 @@
+scenario_name,discount_rate,investment_return,source_year,source,notes
+base_case,0.035,0.045,2024,placeholder_replace_with_riksbank_or_market_data,Base valuation assumptions
+low_interest_rate,0.025,0.035,2024,placeholder_replace_with_riksbank_or_market_data,Lower-rate environment
+high_interest_rate,0.045,0.055,2024,placeholder_replace_with_riksbank_or_market_data,Higher-rate environment
+stress_return,0.035,0.020,2024,placeholder_replace_with_riksbank_or_market_data,Adverse investment-return scenario
