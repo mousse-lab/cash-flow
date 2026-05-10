@@ -1,0 +1,6 @@
+metric,value,unit,source_year,source,notes
+premium_income,2500000000,SEK,2024,placeholder_replace_with_annual_report,Example aggregate premium income used for calibration
+operating_expenses,180000000,SEK,2024,placeholder_replace_with_annual_report,Example operating expenses used for calibration
+assets_under_management,120000000000,SEK,2024,placeholder_replace_with_annual_report,Example savings/fund value scale
+insurance_liabilities,95000000000,SEK,2024,placeholder_replace_with_annual_report,Example liability scale
+profit_before_tax,450000000,SEK,2024,placeholder_replace_with_annual_report,Example reported profitability benchmark
